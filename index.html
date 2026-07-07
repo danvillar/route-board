@@ -158,8 +158,11 @@
     </div>
     <label for="authEmail">Your email</label>
     <input type="email" id="authEmail" placeholder="you@company.com" autocomplete="email">
-    <button class="btn-primary" id="authBtn" onclick="sendLink()">Email me a sign-in link</button>
-    <p>No password needed. Tap the link in the email and you'll stay signed in on this phone. Your sites are stored in your private database — only your account can see them.</p>
+    <label for="authPass">Password</label>
+    <input type="password" id="authPass" placeholder="At least 6 characters" autocomplete="current-password">
+    <button class="btn-primary" id="authBtn" onclick="signIn()">Sign in</button>
+    <button class="btn-ghost" id="signupBtn" onclick="createAccount()" style="width:100%;margin-top:10px;padding:11px">First time here? Create account</button>
+    <p>One account, any device — no emails to wait for. Your sites are stored in your private database; only your account can see them.</p>
   </div>
 </div>
 
@@ -272,8 +275,8 @@
    SETUP — paste your two Supabase values between the quotes.
    Find them in Supabase: Project Settings -> API
    ============================================================ */
-const SUPABASE_URL      = "https://itgmgkhnwcztuwoetywv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_WTLoaCG468syuAXr-BLY9g_wefu955j";
+const SUPABASE_URL      = "PASTE_YOUR_PROJECT_URL_HERE";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_PUBLIC_KEY_HERE";
 /* ============================================================ */
 
 const configured = SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.length > 40;
@@ -306,18 +309,39 @@ function showAuth(){
   document.getElementById('authView').classList.remove('hidden');
   document.getElementById('appView').classList.add('hidden');
 }
-async function sendLink(){
+function authInputs(){
   const email = document.getElementById('authEmail').value.trim();
-  if (!email || !email.includes('@')){ toast('Enter your email address'); return; }
+  const pass = document.getElementById('authPass').value;
+  if (!email || !email.includes('@')){ toast('Enter your email address'); return null; }
+  if (!pass || pass.length < 6){ toast('Password needs at least 6 characters'); return null; }
+  return { email, pass };
+}
+async function signIn(){
+  const c = authInputs(); if(!c) return;
   const btn = document.getElementById('authBtn');
-  btn.disabled = true; btn.textContent = 'Sending...';
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options:{ emailRedirectTo: location.origin + location.pathname }
-  });
-  btn.disabled = false; btn.textContent = 'Email me a sign-in link';
-  if (error){ toast('Could not send link: ' + error.message); return; }
-  toast('Link sent — check your email and tap it');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  const { error } = await sb.auth.signInWithPassword({ email: c.email, password: c.pass });
+  btn.disabled = false; btn.textContent = 'Sign in';
+  if (error){
+    if ((error.message||'').toLowerCase().includes('invalid'))
+      toast('Wrong email or password — first time here? Tap Create account');
+    else if ((error.message||'').toLowerCase().includes('not confirmed'))
+      toast('Email not confirmed — in Supabase turn off "Confirm email" (see instructions), then sign in');
+    else
+      toast('Sign-in failed: ' + error.message);
+  }
+}
+async function createAccount(){
+  const c = authInputs(); if(!c) return;
+  const btn = document.getElementById('signupBtn');
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  const { data, error } = await sb.auth.signUp({ email: c.email, password: c.pass });
+  btn.disabled = false; btn.textContent = 'First time here? Create account';
+  if (error){ toast('Could not create account: ' + error.message); return; }
+  if (!data.session){
+    toast('Account created but needs email confirmation — turn off "Confirm email" in Supabase, then sign in');
+  }
+  /* if a session was created, onAuthStateChange signs you in automatically */
 }
 async function signOut(){
   if (!confirm('Sign out of Route Board?')) return;
@@ -662,7 +686,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') ['overlay','backupOverlay','restoreOverlay'].forEach(id => showOverlay(id,false));
 });
 document.getElementById('authEmail').addEventListener('keydown', e => {
-  if (e.key === 'Enter') sendLink();
+  if (e.key === 'Enter') document.getElementById('authPass').focus();
+});
+document.getElementById('authPass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') signIn();
 });
 let toastTimer;
 function toast(msg){
@@ -676,3 +703,4 @@ init();
 </script>
 </body>
 </html>
+
