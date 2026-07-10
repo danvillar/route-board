@@ -51,7 +51,7 @@ button:disabled{opacity:.5;cursor:default}
 
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .toolbar h2{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.filter-row{margin-bottom:6px}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .filter-row select{background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;max-width:100%}
 
 .group{margin:26px 0 10px;display:flex;align-items:center;gap:12px}

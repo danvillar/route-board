@@ -65,6 +65,7 @@
   </div>
   <div class="filter-row" id="filterRow" style="display:none">
     <select id="acctFilter" onchange="render()" aria-label="Filter by account"></select>
+    <select id="cityFilter" onchange="render()" aria-label="Filter by city"></select>
   </div>
 
   <div id="board"></div>
@@ -79,6 +80,16 @@
     <datalist id="acctList"></datalist>
     <label for="fName">Site name</label>
     <input type="text" id="fName" placeholder="e.g. Mount Royal Collegiate">
+    <div class="row2">
+      <div>
+        <label for="fCity">City</label>
+        <input type="text" id="fCity" placeholder="e.g. Saskatoon">
+      </div>
+      <div>
+        <label for="fAddress">Address <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="fAddress" placeholder="e.g. 123 Main St">
+      </div>
+    </div>
     <label>Systems on site</label>
     <div class="sys-picker" id="sysPicker">
       <button type="button" class="sys-opt" data-sys="Boiler">Boiler</button>

@@ -36,6 +36,9 @@ export async function loadSites(){
 function accounts(){
   return [...new Set(sites.map(s => (s.account||'').trim()).filter(Boolean))].sort();
 }
+function cities(){
+  return [...new Set(sites.map(s => (s.city||'').trim()).filter(Boolean))].sort();
+}
 
 /* ---------- render ---------- */
 export function render(){
@@ -46,17 +49,30 @@ export function render(){
 
   const filterRow = document.getElementById('filterRow');
   const sel = document.getElementById('acctFilter');
+  const citySel = document.getElementById('cityFilter');
   const accts = accounts();
+  const cityList = cities();
   const current = sel.value || '';
+  const currentCity = citySel.value || '';
   if (accts.length > 1){
-    filterRow.style.display = '';
+    sel.style.display = '';
     sel.innerHTML = '<option value="">All accounts</option>' +
       accts.map(a => `<option value="${esc(a)}" ${a===current?'selected':''}>${esc(a)}</option>`).join('');
   } else {
-    filterRow.style.display = 'none';
+    sel.style.display = 'none';
     sel.innerHTML = '<option value=""></option>';
   }
+  if (cityList.length > 1){
+    citySel.style.display = '';
+    citySel.innerHTML = '<option value="">All cities</option>' +
+      cityList.map(c => `<option value="${esc(c)}" ${c===currentCity?'selected':''}>${esc(c)}</option>`).join('');
+  } else {
+    citySel.style.display = 'none';
+    citySel.innerHTML = '<option value=""></option>';
+  }
+  filterRow.style.display = (accts.length > 1 || cityList.length > 1) ? '' : 'none';
   const filter = accts.length > 1 ? sel.value : '';
+  const cityFilter = cityList.length > 1 ? citySel.value : '';
 
   if (!sites.length){
     board.innerHTML = `<div class="empty">
@@ -69,7 +85,9 @@ export function render(){
     return;
   }
 
-  const visible = sites.filter(s => !filter || (s.account||'').trim() === filter);
+  const visible = sites.filter(s =>
+    (!filter || (s.account||'').trim() === filter) &&
+    (!cityFilter || (s.city||'').trim() === cityFilter));
   const enriched = visible.map(s => ({...s, ...calc(s)})).sort((a,b) => a.daysLeft - b.daysLeft);
   const overdue  = enriched.filter(s => s.daysLeft < 0);
   const week     = enriched.filter(s => s.daysLeft >= 0 && s.daysLeft <= 7);
@@ -110,6 +128,7 @@ function card(s){
         <div class="site-name">${esc(s.name)}</div>
         <div class="site-meta">
           <span class="chip">${freqName(s.freq)}</span>
+          ${s.city ? `<span class="chip">${esc(s.city)}</span>` : ''}
           ${sysChips}
           <span class="chip">Last: ${fmt(new Date(s.lastVisit+'T00:00:00'))}</span>
           <span class="chip">Next: ${fmt(s.due)}</span>
@@ -180,6 +199,8 @@ export function openModal(){
   document.getElementById('saveBtn').textContent = 'Add to sites';
   document.getElementById('fAccount').value = '';
   document.getElementById('fName').value = '';
+  document.getElementById('fCity').value = '';
+  document.getElementById('fAddress').value = '';
   document.getElementById('fFreq').value = '30';
   document.getElementById('fNotes').value = '';
   document.getElementById('fLast').value = isoDate(todayMid());
@@ -194,6 +215,8 @@ export function editSite(id){
   document.getElementById('saveBtn').textContent = 'Save changes';
   document.getElementById('fAccount').value = s.account || '';
   document.getElementById('fName').value = s.name;
+  document.getElementById('fCity').value = s.city || '';
+  document.getElementById('fAddress').value = s.address || '';
   document.getElementById('fFreq').value = s.freq;
   document.getElementById('fLast').value = s.lastVisit;
   document.getElementById('fNotes').value = s.notes || '';
@@ -212,6 +235,8 @@ export async function saveSite(){
   const data = {
     name,
     account: document.getElementById('fAccount').value.trim(),
+    city: document.getElementById('fCity').value.trim(),
+    address: document.getElementById('fAddress').value.trim(),
     freq: parseInt(document.getElementById('fFreq').value, 10),
     lastVisit,
     notes: document.getElementById('fNotes').value.trim(),
@@ -276,7 +301,9 @@ export async function doRestore(){
     const restored = [];
     for (const s of parsed){
       restored.push(await dbInsert({
-        account: s.account || '', name: s.name, systems: s.systems || [],
+        account: s.account || '', name: s.name,
+        city: s.city || '', address: s.address || '',
+        systems: s.systems || [],
         freq: s.freq, lastVisit: s.lastVisit, notes: s.notes || '',
         reportPending: !!s.reportPending
       }));

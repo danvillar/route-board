@@ -3,6 +3,7 @@ import { sb } from './config.js';
 function rowToSite(r){
   return {
     id: r.id, account: r.account || '', name: r.name,
+    city: r.city || '', address: r.address || '',
     systems: r.systems || [], freq: r.freq,
     lastVisit: r.last_visit, notes: r.notes || '',
     reportPending: !!r.report_pending
@@ -10,7 +11,9 @@ function rowToSite(r){
 }
 function siteToRow(s){
   return {
-    account: s.account || '', name: s.name, systems: s.systems || [],
+    account: s.account || '', name: s.name,
+    city: s.city || '', address: s.address || '',
+    systems: s.systems || [],
     freq: s.freq, last_visit: s.lastVisit, notes: s.notes || '',
     report_pending: !!s.reportPending
   };
