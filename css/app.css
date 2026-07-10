@@ -93,6 +93,20 @@ button:disabled{opacity:.5;cursor:default}
 .btn-small:hover{color:var(--text)}
 .report-flag{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);border:1px dashed rgba(201,138,75,.5);border-radius:4px;padding:3px 8px}
 
+.svc-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.svc-row:first-of-type{border-top:none;padding-top:2px}
+.svc-info{min-width:0}
+.svc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:600;letter-spacing:.01em}
+.svc-cadence{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:3px}
+.svc-due{text-align:right;min-width:80px}
+.svc-due .due-num{font-size:22px}
+.svc-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.service-list{margin:10px 0 4px}
+.service-item{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.service-item:first-child{border-top:none}
+.service-item .meta{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+
 .empty{border:1px dashed var(--line);border-radius:12px;padding:48px 24px;text-align:center;color:var(--muted)}
 .empty h3{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
 .empty p{font-size:14px;max-width:420px;margin:0 auto 18px;line-height:1.6}

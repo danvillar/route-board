@@ -96,7 +96,7 @@
       <button type="button" class="sys-opt" data-sys="Cooling tower">Cooling tower</button>
       <button type="button" class="sys-opt" data-sys="Closed loop">Closed loop</button>
     </div>
-    <div class="row2">
+    <div class="row2" id="freqRow">
       <div>
         <label for="fFreq">Visit frequency</label>
         <select id="fFreq">
@@ -113,6 +113,7 @@
         <input type="date" id="fLast">
       </div>
     </div>
+    <p class="sub hidden" id="freqEditNote">This site's service schedule is managed from <b>Services</b> on its board card.</p>
     <label for="fNotes">Site notes <span style="text-transform:none;letter-spacing:0">(contacts, delivery, watch items)</span></label>
     <textarea id="fNotes" placeholder="e.g. Jessica 306-555-0000 / deliver to basement parkade"></textarea>
     <div class="modal-actions">
@@ -148,6 +149,71 @@
   </div>
 </div>
 
+<!-- manage a site's scheduled services -->
+<div class="overlay" id="servicesOverlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3 id="servicesTitle">Services</h3>
+    <p class="sub">Scheduled services for this site. Add one per thing that needs its own cadence — a service visit, a legionella test, a seasonal cooling tower check.</p>
+    <div class="service-list" id="serviceList"></div>
+
+    <label for="svcTypeSelect">Service type</label>
+    <select id="svcTypeSelect"></select>
+    <label for="svcCadenceMode">Cadence</label>
+    <select id="svcCadenceMode">
+      <option value="interval">Every N days</option>
+      <option value="months">Specific months</option>
+      <option value="manual">Manual — I'll set the date</option>
+    </select>
+    <div id="svcIntervalField">
+      <label for="svcIntervalDays">Interval (days)</label>
+      <input type="number" id="svcIntervalDays" min="1" value="30">
+    </div>
+    <div id="svcMonthsField" class="hidden">
+      <label>Months</label>
+      <div class="sys-picker" id="monthPicker">
+        <button type="button" class="sys-opt" data-month="1">Jan</button>
+        <button type="button" class="sys-opt" data-month="2">Feb</button>
+        <button type="button" class="sys-opt" data-month="3">Mar</button>
+        <button type="button" class="sys-opt" data-month="4">Apr</button>
+        <button type="button" class="sys-opt" data-month="5">May</button>
+        <button type="button" class="sys-opt" data-month="6">Jun</button>
+        <button type="button" class="sys-opt" data-month="7">Jul</button>
+        <button type="button" class="sys-opt" data-month="8">Aug</button>
+        <button type="button" class="sys-opt" data-month="9">Sep</button>
+        <button type="button" class="sys-opt" data-month="10">Oct</button>
+        <button type="button" class="sys-opt" data-month="11">Nov</button>
+        <button type="button" class="sys-opt" data-month="12">Dec</button>
+      </div>
+    </div>
+    <label for="svcNextDue">Next due</label>
+    <input type="date" id="svcNextDue">
+    <div class="modal-actions">
+      <button class="btn-ghost" id="svcCancelBtn" onclick="cancelServiceEdit()">Cancel</button>
+      <button class="btn-primary" id="svcSaveBtn" onclick="saveService()">Add service</button>
+    </div>
+    <div class="modal-actions" style="justify-content:flex-start;margin-top:8px">
+      <button class="btn-ghost" onclick="closeServices()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- log a service visit -->
+<div class="overlay" id="logOverlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3 id="logTitle">Log service</h3>
+    <label for="logDate">Date</label>
+    <input type="date" id="logDate">
+    <label for="logNotes">Notes</label>
+    <textarea id="logNotes" placeholder="Optional"></textarea>
+    <label for="logNextDue">Next due</label>
+    <input type="date" id="logNextDue">
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeLog()">Cancel</button>
+      <button class="btn-primary" onclick="saveLog()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -160,7 +226,6 @@ window.closeModal = board.closeModal;
 window.saveSite = board.saveSite;
 window.editSite = board.editSite;
 window.removeSite = board.removeSite;
-window.logVisit = board.logVisit;
 window.reportSent = board.reportSent;
 window.openBackup = board.openBackup;
 window.closeBackup = board.closeBackup;
@@ -169,6 +234,15 @@ window.openRestore = board.openRestore;
 window.closeRestore = board.closeRestore;
 window.doRestore = board.doRestore;
 window.render = board.render;
+window.openServices = board.openServices;
+window.closeServices = board.closeServices;
+window.saveService = board.saveService;
+window.editService = board.editService;
+window.removeService = board.removeService;
+window.cancelServiceEdit = board.cancelServiceEdit;
+window.logService = board.logService;
+window.closeLog = board.closeLog;
+window.saveLog = board.saveLog;
 window.signIn = signIn;
 window.createAccount = createAccount;
 window.signOut = signOut;
