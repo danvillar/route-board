@@ -2,7 +2,7 @@ import {
   loadSites as dbLoadSites, dbInsert, dbUpdate, dbDelete,
   fetchServiceTypes, insertServiceTypes,
   fetchSiteServices, insertSiteService, updateSiteService, deleteSiteService,
-  insertActivityLog
+  insertActivityLog, fetchActivityLog
 } from './db.js';
 import { calc, todayMid, isoDate, daysUntil, proposeNextDue } from './schedule.js';
 import { toast, showOverlay, wireModalDismiss } from './ui-modals.js';
@@ -30,7 +30,9 @@ let editingId = null;
 let editingServiceId = null;
 let servicesSiteId = null;
 let loggingServiceId = null;
+let historySiteId = null;
 let dbOk = false;
+const NEW_TYPE_VALUE = '__new__';
 
 function setDbStatus(state, msg){
   const el = document.getElementById('storageStatus');
@@ -199,7 +201,10 @@ function siteCard(group){
           ${sysChips}
         </div>
       </div>
-      <button class="btn-small" onclick="openServices('${site.id}')">Services</button>
+      <div class="svc-actions">
+        <button class="btn-small" onclick="openHistory('${site.id}')">History</button>
+        <button class="btn-small" onclick="openServices('${site.id}')">Services</button>
+      </div>
     </div>
     ${site.notes ? `<div class="note">${esc(site.notes)}</div>` : ''}
     ${group.services.map(svcRow).join('')}
@@ -480,6 +485,75 @@ export async function saveLog(){
   }
 }
 
+/* ---------- site history + log activity ---------- */
+export async function openHistory(siteId){
+  const site = siteById(siteId); if(!site) return;
+  historySiteId = siteId;
+  document.getElementById('historyTitle').textContent = site.name + ' — history';
+  resetActivityForm();
+  showOverlay('historyOverlay', true);
+  await renderHistoryList();
+}
+export function closeHistory(){
+  showOverlay('historyOverlay', false);
+  historySiteId = null;
+}
+async function renderHistoryList(){
+  const el = document.getElementById('historyList');
+  el.innerHTML = '<p class="sub">Loading…</p>';
+  try{
+    const entries = await fetchActivityLog(historySiteId);
+    if (!entries.length){
+      el.innerHTML = '<p class="sub">Nothing logged yet.</p>';
+      return;
+    }
+    el.innerHTML = entries.map(a => `<div class="service-item">
+      <div>
+        <div class="svc-name">${esc(a.label)}</div>
+        <div class="meta">${esc(a.doneOn)}</div>
+        ${a.notes ? `<div class="note">${esc(a.notes)}</div>` : ''}
+      </div>
+    </div>`).join('');
+  }catch(e){
+    el.innerHTML = '<p class="sub">Could not load history.</p>';
+    dbFail(e);
+  }
+}
+function resetActivityForm(){
+  const sel = document.getElementById('actTypeSelect');
+  sel.innerHTML = serviceTypes.filter(t => t.kind === 'activity')
+    .map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('') +
+    `<option value="${NEW_TYPE_VALUE}">+ Add new activity type</option>`;
+  document.getElementById('actNewTypeName').value = '';
+  document.getElementById('actNewTypeName').classList.add('hidden');
+  document.getElementById('actDate').value = isoDate(todayMid());
+  document.getElementById('actNotes').value = '';
+}
+export async function saveActivity(){
+  const sel = document.getElementById('actTypeSelect');
+  const doneOn = document.getElementById('actDate').value;
+  const notes = document.getElementById('actNotes').value.trim();
+  if (!doneOn){ toast('Set the date'); return; }
+  let label;
+  try{
+    if (sel.value === NEW_TYPE_VALUE){
+      const name = document.getElementById('actNewTypeName').value.trim();
+      if (!name){ toast('Name the new activity type'); return; }
+      const [created] = await insertServiceTypes([{ name, kind: 'activity', defaultIntervalDays: null }]);
+      serviceTypes.push(created);
+      label = created.name;
+    } else {
+      const type = serviceTypeById(sel.value);
+      if (!type){ toast('Pick an activity type'); return; }
+      label = type.name;
+    }
+    await insertActivityLog({ siteId: historySiteId, siteServiceId: null, label, doneOn, notes });
+    resetActivityForm();
+    await renderHistoryList();
+    toast('Logged ' + label);
+  }catch(e){ dbFail(e); }
+}
+
 /* ---------- backup / restore ---------- */
 export function openBackup(){
   if (!sites.length){ toast('Nothing to back up yet'); return; }
@@ -549,4 +623,7 @@ document.getElementById('monthPicker').addEventListener('click', e => {
   const b = e.target.closest('.sys-opt'); if(b) b.classList.toggle('on');
 });
 document.getElementById('svcCadenceMode').addEventListener('change', updateCadenceFieldVisibility);
-wireModalDismiss(['overlay','backupOverlay','restoreOverlay','servicesOverlay','logOverlay']);
+document.getElementById('actTypeSelect').addEventListener('change', e => {
+  document.getElementById('actNewTypeName').classList.toggle('hidden', e.target.value !== NEW_TYPE_VALUE);
+});
+wireModalDismiss(['overlay','backupOverlay','restoreOverlay','servicesOverlay','logOverlay','historyOverlay']);

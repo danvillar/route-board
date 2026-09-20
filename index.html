@@ -214,6 +214,27 @@
   </div>
 </div>
 
+<!-- site history + log activity -->
+<div class="overlay" id="historyOverlay" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3 id="historyTitle">History</h3>
+    <p class="sub">Everything logged for this site, newest first — service visits, tests, and activities like phone calls.</p>
+    <div class="service-list" id="historyList"></div>
+
+    <label for="actTypeSelect">Activity type</label>
+    <select id="actTypeSelect"></select>
+    <input type="text" id="actNewTypeName" class="hidden" placeholder="Name this activity type, e.g. Phone call">
+    <label for="actDate">Date</label>
+    <input type="date" id="actDate">
+    <label for="actNotes">Notes</label>
+    <textarea id="actNotes" placeholder="Optional"></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeHistory()">Done</button>
+      <button class="btn-primary" onclick="saveActivity()">Log activity</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -243,6 +264,9 @@ window.cancelServiceEdit = board.cancelServiceEdit;
 window.logService = board.logService;
 window.closeLog = board.closeLog;
 window.saveLog = board.saveLog;
+window.openHistory = board.openHistory;
+window.closeHistory = board.closeHistory;
+window.saveActivity = board.saveActivity;
 window.signIn = signIn;
 window.createAccount = createAccount;
 window.signOut = signOut;

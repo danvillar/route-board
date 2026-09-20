@@ -95,10 +95,24 @@ export async function deleteSiteService(id){
 }
 
 /* ---------- activity log ---------- */
+function rowToActivity(r){
+  return {
+    id: r.id, siteId: r.site_id, siteServiceId: r.site_service_id,
+    label: r.label, doneOn: r.done_on, notes: r.notes || '', nextDueSet: r.next_due_set
+  };
+}
 export async function insertActivityLog({ siteId, siteServiceId, label, doneOn, notes, nextDueSet }){
   const { error } = await sb.from('activity_log').insert({
     site_id: siteId, site_service_id: siteServiceId || null, label,
     done_on: doneOn, notes: notes || '', next_due_set: nextDueSet || null
   });
   if (error) throw error;
+}
+export async function fetchActivityLog(siteId){
+  const { data, error } = await sb.from('activity_log')
+    .select('*').eq('site_id', siteId)
+    .order('done_on', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data.map(rowToActivity);
 }
